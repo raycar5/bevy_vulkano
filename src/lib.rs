@@ -35,6 +35,7 @@ use bevy::{
 #[cfg(feature = "gui")]
 pub use egui_winit_vulkano;
 pub use pipeline_sync_data::*;
+use vulkano::format::Format;
 use vulkano_util::context::{VulkanoConfig, VulkanoContext};
 pub use vulkano_windows::*;
 use winit::{
@@ -65,6 +66,7 @@ pub struct VulkanoWinitConfig {
     pub is_gui_overlay: bool,
     /// Control whether you want to run the app with or without a window
     pub add_primary_window: bool,
+    pub srgb_swapchain_image: bool,
 }
 
 impl Default for VulkanoWinitConfig {
@@ -74,6 +76,7 @@ impl Default for VulkanoWinitConfig {
             vulkano_config: VulkanoConfig::default(),
             is_gui_overlay: true,
             add_primary_window: true,
+            srgb_swapchain_image: true,
         }
     }
 }
@@ -109,9 +112,7 @@ impl Plugin for VulkanoWinitPlugin {
         };
 
         // Create vulkano context using the vulkano config from config
-        let VulkanoWinitConfig {
-            vulkano_config, ..
-        } = config;
+        let VulkanoWinitConfig { vulkano_config, .. } = config;
         let vulkano_context = VulkanoContext::new(vulkano_config);
         // Place config back as resource. Vulkano config will be useless at this point.
         let new_config = VulkanoWinitConfig {
@@ -212,10 +213,7 @@ fn change_window(world: &mut World) {
         let id = bevy_window.id();
         for command in bevy_window.drain_commands() {
             match command {
-                bevy::window::WindowCommand::SetWindowMode {
-                    mode,
-                    resolution,
-                } => {
+                bevy::window::WindowCommand::SetWindowMode { mode, resolution } => {
                     let window = vulkano_winit_windows.get_winit_window(id).unwrap();
                     match mode {
                         bevy::window::WindowMode::BorderlessFullscreen => {
@@ -236,22 +234,15 @@ fn change_window(world: &mut World) {
                         bevy::window::WindowMode::Windowed => window.set_fullscreen(None),
                     }
                 }
-                bevy::window::WindowCommand::SetTitle {
-                    title,
-                } => {
+                bevy::window::WindowCommand::SetTitle { title } => {
                     let window = vulkano_winit_windows.get_winit_window(id).unwrap();
                     window.set_title(&title);
                 }
-                bevy::window::WindowCommand::SetScaleFactor {
-                    scale_factor,
-                } => {
+                bevy::window::WindowCommand::SetScaleFactor { scale_factor } => {
                     let mut window_dpi_changed_events = world
                         .get_resource_mut::<Events<WindowScaleFactorChanged>>()
                         .unwrap();
-                    window_dpi_changed_events.send(WindowScaleFactorChanged {
-                        id,
-                        scale_factor,
-                    });
+                    window_dpi_changed_events.send(WindowScaleFactorChanged { id, scale_factor });
                 }
                 bevy::window::WindowCommand::SetResolution {
                     logical_resolution,
@@ -263,9 +254,7 @@ fn change_window(world: &mut World) {
                             .to_physical::<f64>(scale_factor),
                     );
                 }
-                bevy::window::WindowCommand::SetPresentMode {
-                    present_mode,
-                } => {
+                bevy::window::WindowCommand::SetPresentMode { present_mode } => {
                     let present_mode = match present_mode {
                         bevy::window::PresentMode::AutoVsync => {
                             vulkano::swapchain::PresentMode::FifoRelaxed
@@ -290,27 +279,19 @@ fn change_window(world: &mut World) {
                     };
                     wr.set_present_mode(present_mode);
                 }
-                bevy::window::WindowCommand::SetResizable {
-                    resizable,
-                } => {
+                bevy::window::WindowCommand::SetResizable { resizable } => {
                     let window = vulkano_winit_windows.get_winit_window(id).unwrap();
                     window.set_resizable(resizable);
                 }
-                bevy::window::WindowCommand::SetDecorations {
-                    decorations,
-                } => {
+                bevy::window::WindowCommand::SetDecorations { decorations } => {
                     let window = vulkano_winit_windows.get_winit_window(id).unwrap();
                     window.set_decorations(decorations);
                 }
-                bevy::window::WindowCommand::SetCursorIcon {
-                    icon,
-                } => {
+                bevy::window::WindowCommand::SetCursorIcon { icon } => {
                     let window = vulkano_winit_windows.get_winit_window(id).unwrap();
                     window.set_cursor_icon(converters::convert_cursor_icon(icon));
                 }
-                bevy::window::WindowCommand::SetCursorGrabMode {
-                    grab_mode,
-                } => {
+                bevy::window::WindowCommand::SetCursorGrabMode { grab_mode } => {
                     let window = vulkano_winit_windows.get_winit_window(id).unwrap();
                     window
                         .set_cursor_grab(match grab_mode {
@@ -320,15 +301,11 @@ fn change_window(world: &mut World) {
                         })
                         .unwrap_or_else(|e| error!("Unable to un/grab cursor: {}", e));
                 }
-                bevy::window::WindowCommand::SetCursorVisibility {
-                    visible,
-                } => {
+                bevy::window::WindowCommand::SetCursorVisibility { visible } => {
                     let window = vulkano_winit_windows.get_winit_window(id).unwrap();
                     window.set_cursor_visible(visible);
                 }
-                bevy::window::WindowCommand::SetCursorPosition {
-                    position,
-                } => {
+                bevy::window::WindowCommand::SetCursorPosition { position } => {
                     let window = vulkano_winit_windows.get_winit_window(id).unwrap();
                     let inner_size = window.inner_size().to_logical::<f32>(window.scale_factor());
                     window
@@ -338,15 +315,11 @@ fn change_window(world: &mut World) {
                         ))
                         .unwrap_or_else(|e| error!("Unable to set cursor position: {}", e));
                 }
-                bevy::window::WindowCommand::SetMaximized {
-                    maximized,
-                } => {
+                bevy::window::WindowCommand::SetMaximized { maximized } => {
                     let window = vulkano_winit_windows.get_winit_window(id).unwrap();
                     window.set_maximized(maximized)
                 }
-                bevy::window::WindowCommand::SetMinimized {
-                    minimized,
-                } => {
+                bevy::window::WindowCommand::SetMinimized { minimized } => {
                     let window = vulkano_winit_windows.get_winit_window(id).unwrap();
                     window.set_minimized(minimized)
                 }
@@ -386,9 +359,7 @@ fn change_window(world: &mut World) {
                         warn!("Couldn't get monitor selected with: {monitor_selection:?}");
                     }
                 }
-                bevy::window::WindowCommand::SetResizeConstraints {
-                    resize_constraints,
-                } => {
+                bevy::window::WindowCommand::SetResizeConstraints { resize_constraints } => {
                     let window = vulkano_winit_windows.get_winit_window(id).unwrap();
                     let constraints = resize_constraints.check_constraints();
                     let min_inner_size = LogicalSize {
@@ -424,9 +395,7 @@ fn change_window(world: &mut World) {
             if app_close {
                 app_exit_events.send(AppExit);
             } else if window_close {
-                window_close_events.send(WindowClosed {
-                    id,
-                })
+                window_close_events.send(WindowClosed { id })
             }
         }
     }
@@ -647,20 +616,15 @@ pub fn winit_runner_with(mut app: App) {
                             let mut window_close_requested_events = world
                                 .get_resource_mut::<Events<WindowCloseRequested>>()
                                 .unwrap();
-                            window_close_requested_events.send(WindowCloseRequested {
-                                id: window_id,
-                            });
+                            window_close_requested_events
+                                .send(WindowCloseRequested { id: window_id });
                         }
-                        WindowEvent::KeyboardInput {
-                            ref input, ..
-                        } => {
+                        WindowEvent::KeyboardInput { ref input, .. } => {
                             let mut keyboard_input_events =
                                 world.get_resource_mut::<Events<KeyboardInput>>().unwrap();
                             keyboard_input_events.send(converters::convert_keyboard_input(input));
                         }
-                        WindowEvent::CursorMoved {
-                            position, ..
-                        } => {
+                        WindowEvent::CursorMoved { position, .. } => {
                             let mut cursor_moved_events =
                                 world.get_resource_mut::<Events<CursorMoved>>().unwrap();
                             let winit_window =
@@ -680,30 +644,18 @@ pub fn winit_runner_with(mut app: App) {
                                 position: (physical_position / window.scale_factor()).as_vec2(),
                             });
                         }
-                        WindowEvent::CursorEntered {
-                            ..
-                        } => {
+                        WindowEvent::CursorEntered { .. } => {
                             let mut cursor_entered_events =
                                 world.get_resource_mut::<Events<CursorEntered>>().unwrap();
-                            cursor_entered_events.send(CursorEntered {
-                                id: window_id,
-                            });
+                            cursor_entered_events.send(CursorEntered { id: window_id });
                         }
-                        WindowEvent::CursorLeft {
-                            ..
-                        } => {
+                        WindowEvent::CursorLeft { .. } => {
                             let mut cursor_left_events =
                                 world.get_resource_mut::<Events<CursorLeft>>().unwrap();
                             window.update_cursor_physical_position_from_backend(None);
-                            cursor_left_events.send(CursorLeft {
-                                id: window_id,
-                            });
+                            cursor_left_events.send(CursorLeft { id: window_id });
                         }
-                        WindowEvent::MouseInput {
-                            state,
-                            button,
-                            ..
-                        } => {
+                        WindowEvent::MouseInput { state, button, .. } => {
                             let mut mouse_button_input_events = world
                                 .get_resource_mut::<Events<MouseButtonInput>>()
                                 .unwrap();
@@ -712,9 +664,7 @@ pub fn winit_runner_with(mut app: App) {
                                 state: converters::convert_element_state(state),
                             });
                         }
-                        WindowEvent::MouseWheel {
-                            delta, ..
-                        } => match delta {
+                        WindowEvent::MouseWheel { delta, .. } => match delta {
                             event::MouseScrollDelta::LineDelta(x, y) => {
                                 let mut mouse_wheel_input_events =
                                     world.get_resource_mut::<Events<MouseWheel>>().unwrap();
@@ -827,9 +777,7 @@ pub fn winit_runner_with(mut app: App) {
                         WindowEvent::HoveredFileCancelled => {
                             let mut events =
                                 world.get_resource_mut::<Events<FileDragAndDrop>>().unwrap();
-                            events.send(FileDragAndDrop::HoveredFileCancelled {
-                                id: window_id,
-                            });
+                            events.send(FileDragAndDrop::HoveredFileCancelled { id: window_id });
                         }
                         WindowEvent::Moved(position) => {
                             let position = ivec2(position.x, position.y);
@@ -845,10 +793,7 @@ pub fn winit_runner_with(mut app: App) {
                     }
                 }
                 event::Event::DeviceEvent {
-                    event:
-                        DeviceEvent::MouseMotion {
-                            delta,
-                        },
+                    event: DeviceEvent::MouseMotion { delta },
                     ..
                 } => {
                     let mut mouse_motion_events =
@@ -950,9 +895,7 @@ pub fn exit_on_window_close_system(
         if app_close {
             app_exit_events.send(AppExit);
         } else if window_close {
-            window_close_events.send(WindowClosed {
-                id: event.id,
-            })
+            window_close_events.send(WindowClosed { id: event.id })
         }
     }
 }

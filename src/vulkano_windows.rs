@@ -239,8 +239,12 @@ impl BevyVulkanoWindows {
                 window_descriptor,
                 position.map(|p| [p.x as f32, p.y as f32]),
             ),
-            move |ci| {
-                ci.image_format = Some(vulkano::format::Format::B8G8R8A8_SRGB);
+            if config.srgb_swapchain_image {
+                move |ci| {
+                    ci.image_format = Some(vulkano::format::Format::B8G8R8A8_SRGB);
+                }
+            } else {
+                |_| {}
             },
         );
 
