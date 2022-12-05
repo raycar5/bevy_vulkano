@@ -634,8 +634,8 @@ dependencies = [
  "image",
  "rand",
  "raw-window-handle 0.5.0",
- "vulkano",
- "vulkano-shaders",
+ "vulkano 0.32.0",
+ "vulkano-shaders 0.32.0 (git+https://github.com/raycar5/vulkano?branch=master)",
  "vulkano-util",
  "winit",
 ]
@@ -1149,8 +1149,8 @@ dependencies = [
  "egui",
  "egui-winit",
  "image",
- "vulkano",
- "vulkano-shaders",
+ "vulkano 0.32.1",
+ "vulkano-shaders 0.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "winit",
 ]
 
@@ -2931,6 +2931,33 @@ dependencies = [
 
 [[package]]
 name = "vulkano"
+version = "0.32.0"
+source = "git+https://github.com/raycar5/vulkano?branch=master#1f185319017f292d71c5a3884a9f47f275c2d630"
+dependencies = [
+ "ahash 0.8.2",
+ "ash",
+ "bytemuck",
+ "core-graphics-types",
+ "crossbeam-queue",
+ "half",
+ "heck",
+ "indexmap",
+ "libloading",
+ "objc",
+ "once_cell",
+ "parking_lot",
+ "proc-macro2",
+ "quote",
+ "regex",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "thread_local",
+ "vk-parse",
+]
+
+[[package]]
+name = "vulkano"
 version = "0.32.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eecedd057ea4cd85c0e43ba2ad30e599954bd958c50d0f7849439548cfa573ce"
@@ -2969,17 +2996,30 @@ dependencies = [
  "quote",
  "shaderc",
  "syn",
- "vulkano",
+ "vulkano 0.32.1",
+]
+
+[[package]]
+name = "vulkano-shaders"
+version = "0.32.0"
+source = "git+https://github.com/raycar5/vulkano?branch=master#1f185319017f292d71c5a3884a9f47f275c2d630"
+dependencies = [
+ "ahash 0.8.2",
+ "heck",
+ "proc-macro2",
+ "quote",
+ "shaderc",
+ "syn",
+ "vulkano 0.32.0",
 ]
 
 [[package]]
 name = "vulkano-util"
 version = "0.32.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df7d34bf37d622aa10d63a05396d91566d8298ca04ebc632f536946659a62f58"
+source = "git+https://github.com/raycar5/vulkano?branch=master#1f185319017f292d71c5a3884a9f47f275c2d630"
 dependencies = [
  "ahash 0.8.2",
- "vulkano",
+ "vulkano 0.32.0",
  "vulkano-win",
  "winit",
 ]
@@ -2987,13 +3027,12 @@ dependencies = [
 [[package]]
 name = "vulkano-win"
 version = "0.32.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac1056e3238fe9025628b3de0f401d8c60b7a6dc89e059534568f55fef4e29f7"
+source = "git+https://github.com/raycar5/vulkano?branch=master#1f185319017f292d71c5a3884a9f47f275c2d630"
 dependencies = [
  "core-graphics-types",
  "objc",
  "raw-window-handle 0.5.0",
- "vulkano",
+ "vulkano 0.32.0",
  "winit",
 ]
 
