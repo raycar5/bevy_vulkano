@@ -9,7 +9,7 @@ license = "Apache-2.0"
 name = "bevy_vulkano"
 readme = "README.md"
 repository = "https://github.com/hakolao/bevy_vulkano"
-version = "0.9.1"
+version = "0.9.1-1"
 
 [features]
 clipboard = ["gui", "egui_winit_vulkano/clipboard"]
